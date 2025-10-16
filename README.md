@@ -12,8 +12,61 @@ TrackFlow is a modern, full-stack Hybrid Application Tracking System (ATS) desig
 ```
 HybridATS/
 ├── backend/      # Node.js + Express REST API
-├── client/       # React + Vite frontend
-└── README.md
+│   ├── .env
+│   ├── .gitignore
+│   ├── createUser.js
+│   ├── package.json
+│   ├── server.js
+│   ├── vite.config.js
+│   ├── controllers/
+│   │   ├── applicationsController.js
+│   │   ├── authController.js
+│   │   ├── botController.js
+│   │   ├── jobsController.js
+│   ├── middleware/
+│   │   └── auth.js
+│   ├── models/
+│   │   ├── Application.js
+│   │   ├── Jobs.js
+│   │   ├── Logs.js
+│   │   └── User.js
+│   ├── routes/
+│   │   ├── applications.js
+│   │   ├── auth.js
+│   │   ├── bot.js
+│   │   └── jobs.js
+│   └── uploads/
+│       └── resumes/
+├── client/
+│   ├── .gitignore
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── README.md
+│   ├── tailwind.config.js
+│   ├── vite.config copy.js
+│   ├── vite.config.js
+│   ├── public/
+│   └── src/
+│       ├── .env
+│       ├── App.css
+│       ├── App.jsx
+│       ├── AuthContext.jsx
+│       ├── index.css
+│       ├── main.jsx
+│       ├── api/
+│       │   └── index.js
+│       ├── assets/
+│       ├── components/
+│       │   ├── LandingPage.jsx
+│       │   ├── SignIn.jsx
+│       │   ├── SignUp.jsx
+│       │   └── TypeWriterText.jsx
+│       └── dashboards/
+│           ├── Admin.jsx
+│           ├── Applicant.jsx
+│           └── BotDashboard.jsx
 ```
 
 - **Backend:**  
