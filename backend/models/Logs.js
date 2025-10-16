@@ -21,7 +21,7 @@ const logs = new mongoose.Schema({
 
   status: { 
     type: String, 
-    enum: ['applied', 'reviewed', 'interview', 'offer'] 
+    enum: ['applied', 'reviewed', 'interview', 'offer', 'rejected'] 
   },
 
   comment: { 

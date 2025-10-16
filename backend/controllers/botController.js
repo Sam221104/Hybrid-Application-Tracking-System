@@ -26,7 +26,9 @@ exports.runBotMimic = async (req, res) => {
 
       app.status = nextStatus;
       await app.save();
-
+      if(nextStatus === 'rejected') {
+          nextStatus = 'offer';
+      }
       const botUser = await User.findOne({ role: 'bot' });
     const log = await Logs.create({
     application: app._id,
@@ -36,6 +38,7 @@ exports.runBotMimic = async (req, res) => {
     comment: `Automated update by Bot Mimic to ${nextStatus}`,
   });
     }
+    console.log(`Bot Mimic updated ${applications.length} applications`);
 
     res.json({ message: "Bot Mimic run completed" });
   } catch (err) {
