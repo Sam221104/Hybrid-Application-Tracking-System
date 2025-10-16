@@ -44,7 +44,7 @@ export default function BotDashboard() {
   function handleLogout() {
     localStorage.clear();
     sessionStorage.clear();
-    window.location.href = "/signin"; // Force full reload to signin page
+    navigate("/signin");
   }
 
   useEffect(() => {
