@@ -11,7 +11,7 @@ import {
 } from "../api";
 
 export default function AdminDashboard() {
-  const { token, user } = useContext(AuthContext);
+  const { token, user, setToken, setUser } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const [jobs, setJobs] = useState([]);
@@ -35,11 +35,12 @@ export default function AdminDashboard() {
   const [jobApplications, setJobApplications] = useState({}); // Store applications per job
 
   function handleLogout() {
-  localStorage.clear();
-  sessionStorage.clear();
-  window.location.href = "/signin";
-  navigate("/signin");
-}
+    localStorage.clear();
+    sessionStorage.clear();
+    setToken(null);
+    setUser(null);
+    navigate("/signin");
+  }
 
   useEffect(() => {
     if (token) fetchJobs();
