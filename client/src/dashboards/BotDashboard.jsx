@@ -45,6 +45,7 @@ export default function BotDashboard() {
     localStorage.clear();
     sessionStorage.clear();
     window.location.href = "/signin";
+    navigate("/signin");
   }
 
   useEffect(() => {
