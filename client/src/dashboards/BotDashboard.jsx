@@ -44,7 +44,7 @@ export default function BotDashboard() {
   function handleLogout() {
     localStorage.clear();
     sessionStorage.clear();
-    navigate("/signin");
+    window.location.href = "/signin";
   }
 
   useEffect(() => {

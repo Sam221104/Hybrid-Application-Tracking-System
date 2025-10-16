@@ -37,7 +37,7 @@ export default function AdminDashboard() {
   function handleLogout() {
   localStorage.clear();
   sessionStorage.clear();
-  navigate("/signin");
+  window.location.href = "/signin";
 }
 
   useEffect(() => {
