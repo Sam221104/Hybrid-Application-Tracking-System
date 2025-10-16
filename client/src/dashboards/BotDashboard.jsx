@@ -41,6 +41,12 @@ export default function BotDashboard() {
     setRunningBot(false);
   }
 
+  function handleLogout() {
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.href = "/signin"; // Force full reload to signin page
+  }
+
   useEffect(() => {
     if (!token) navigate("/signin");
     fetchLogs();
@@ -73,13 +79,21 @@ const groupedLogs = logs.reduce((acc, log) => {
       <div className="max-w-5xl mx-auto bg-black/90 rounded-lg shadow-lg p-6 border border-blue-950">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-3xl font-bold text-white">Bot Dashboard</h2>
-          <button
-            onClick={handleRunBot}
-            disabled={runningBot}
-            className="px-4 py-2 bg-green-700 text-white rounded hover:bg-green-800"
-          >
-            {runningBot ? "Running Bot..." : "Run Bot Mimic"}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={handleRunBot}
+              disabled={runningBot}
+              className="px-4 py-2 bg-green-700 text-white rounded hover:bg-green-800"
+            >
+              {runningBot ? "Running Bot..." : "Run Bot Mimic"}
+            </button>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 bg-red-700 text-white rounded hover:bg-red-800"
+            >
+              Logout
+            </button>
+          </div>
         </div>
 
         {loading ? (

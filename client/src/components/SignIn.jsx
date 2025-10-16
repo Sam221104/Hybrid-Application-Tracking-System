@@ -1,24 +1,27 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginApplicant } from "../api"; 
+import { loginApplicant } from "../api";
+import { AuthContext } from "../AuthContext";
 
 export default function SignIn() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { setToken, setUser, setRole } = useContext(AuthContext);
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
 
-    const data = await loginApplicant({ username, password }); 
+    const data = await loginApplicant({ username, password });
 
     if (data.token) {
       localStorage.setItem("token", data.token);
-      localStorage.setItem("role", data.role);
-      localStorage.setItem("username", data.username);
+      setToken(data.token);
+      setUser({ username: data.username });
 
+      // Navigate after context is updated
       if (data.role === "applicant") navigate("/dashboard/applicant");
       else if (data.role === "admin") navigate("/dashboard/admin");
       else if (data.role === "bot") navigate("/dashboard/bot");

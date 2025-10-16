@@ -31,11 +31,14 @@ export default function AdminDashboard() {
     status: "",
     comment: "",
   });
+  const [openJobId, setOpenJobId] = useState(null);
+  const [jobApplications, setJobApplications] = useState({}); // Store applications per job
 
   function handleLogout() {
-    localStorage.clear();
-    navigate("/signin");
-  }
+  localStorage.clear();
+  sessionStorage.clear();
+  window.location.href = "/signin"; 
+}
 
   useEffect(() => {
     if (token) fetchJobs();
@@ -79,14 +82,24 @@ export default function AdminDashboard() {
   async function handleUpdateApplication(appId) {
     if (!statusUpdate.status) return alert("Select status first");
     const data = await updateApplicationStatus(token, appId, statusUpdate);
-    if (!data.error) fetchApplications();
-    else alert(data.error);
+    if (!data.error) {
+      // Refresh applications for the open job dropdown
+      if (openJobId) {
+        const apps = await getApplicationsForJob(token, openJobId);
+        setJobApplications((prev) => ({ ...prev, [openJobId]: apps }));
+      }
+      setStatusUpdate({ status: "", comment: "" }); // Optionally reset status/comment
+    } else alert(data.error);
   }
 
   async function handleViewApplications(job) {
+    if (openJobId === job._id) {
+      setOpenJobId(null);
+      return;
+    }
     const apps = await getApplicationsForJob(token, job._id);
-    setSelectedJob(job);
-    setSelectedJobApplications(apps);
+    setJobApplications((prev) => ({ ...prev, [job._id]: apps }));
+    setOpenJobId(job._id);
   }
   async function handleCloseJob(jobId) {
   const res = await updateJobStatus(token, jobId, { status: "closed" });
@@ -254,145 +267,147 @@ export default function AdminDashboard() {
             {jobs.map((job) => (
               <li
                 key={job._id}
-                className="bg-slate-900 p-3 rounded border border-blue-950 flex flex-col md:flex-row md:items-center md:justify-between"
+                className="bg-slate-900 p-3 rounded border border-blue-950 flex flex-col"
               >
-                <span>
-                  <span className="font-semibold text-white">{job.title}</span> (
-                  {job.type}) -{" "}
-                  <span className="text-slate-300">
-                    Status: {job.status} - Location: {job.location} - Deadline:{" "}
-                    {job.applicationDeadline?.split("T")[0]}
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                  <span>
+                    <span className="font-semibold text-white">{job.title}</span> (
+                    {job.type}) -{" "}
+                    <span className="text-slate-300">
+                      Status: {job.status} - Location: {job.location} - Deadline:{" "}
+                      {job.applicationDeadline?.split("T")[0]}
+                    </span>
                   </span>
-                </span>
-                <button
-                  className="mt-2 md:mt-0 px-3 py-1 bg-blue-950 text-white rounded hover:bg-blue-900"
-                  onClick={() => handleViewApplications(job)}
-                >
-                  View Applications
-                </button>
-                <button
-  className="ml-2 px-3 py-1 bg-red-700 text-white rounded hover:bg-red-800"
-  onClick={() => handleCloseJob(job._id)}
-  disabled={job.status === "closed"}
->
-  Close Job
-</button>
+                  <div className="flex gap-2 mt-2 md:mt-0">
+                    <button
+                      className="px-3 py-1 bg-blue-950 text-white rounded hover:bg-blue-900"
+                      onClick={() => handleViewApplications(job)}
+                    >
+                      {openJobId === job._id ? "Hide Applications" : "View Applications"}
+                    </button>
+                    <button
+                      className="px-3 py-1 bg-red-700 text-white rounded hover:bg-red-800"
+                      onClick={() => handleCloseJob(job._id)}
+                      disabled={job.status === "closed"}
+                    >
+                      Close Job
+                    </button>
+                  </div>
+                </div>
+                {/* Dropdown for applications */}
+                {openJobId === job._id && (
+                  <div className="mt-4 bg-black/70 p-4 rounded">
+                    <h4 className="text-white font-semibold mb-2">Applications</h4>
+                    {jobApplications[job._id] && jobApplications[job._id].length > 0 ? (
+                      <ul className="space-y-2">
+                        {jobApplications[job._id].map((app) => (
+                          <li key={app._id} className="bg-slate-900 p-3 rounded border border-blue-950">
+                            <div className="flex justify-between items-center">
+                              <span className="font-semibold text-white">
+                                {job.title} — {app.applicant?.username || app.applicant || "Unknown Applicant"}
+                              </span>
+                              <span className="text-slate-300">Status: {app.status}</span>
+                            </div>
+                            <div className="text-slate-400 text-xs">
+                              Applied: {new Date(app.appliedAt || Date.now()).toLocaleString()}
+                            </div>
+                            {app.resume && (
+                              <a
+                                href={`http://localhost:4000/${app.resume}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-400 underline mr-2"
+                              >
+                                View Resume
+                              </a>
+                            )}
+                            {app.coverLetter && (
+                              <p className="text-slate-300 text-sm mt-1">
+                                <strong>Cover Letter:</strong> {app.coverLetter}
+                              </p>
+                            )}
+                            {app.logs?.length > 0 && (
+                              <div className="mt-2 text-slate-300">
+                                <span>Logs:</span>
+                                <ul className="ml-4 text-xs text-slate-400">
+                                  {app.logs.map((log, idx) => (
+                                    <li key={idx}>
+                                      {log.timestamp} - {log.updatedBy}: {log.status}{" "}
+                                      {log.comment && `(${log.comment})`}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            {/* Only show status/comment/update for non-technical roles */}
+                            {job.type === "non-technical" && (
+                              <div className="flex gap-2 mt-2">
+                                <select
+                                  value={statusUpdate.status}
+                                  onChange={(e) =>
+                                    setStatusUpdate({ ...statusUpdate, status: e.target.value })
+                                  }
+                                  className="p-1 rounded bg-slate-800 text-white border border-blue-950"
+                                >
+                                  <option value="">--Select Status--</option>
+                                  <option value="reviewed">Reviewed</option>
+                                  <option value="interview">Interview</option>
+                                  <option value="rejected">Rejected</option>
+                                  <option value="offer">Offer</option>
+                                </select>
+                                <input
+                                  type="text"
+                                  placeholder="Comment"
+                                  value={statusUpdate.comment}
+                                  onChange={(e) =>
+                                    setStatusUpdate({ ...statusUpdate, comment: e.target.value })
+                                  }
+                                  className="p-1 rounded bg-slate-800 text-white border border-blue-950"
+                                />
+                                <button
+                                  className="px-3 py-1 bg-green-700 text-white rounded hover:bg-green-800"
+                                  onClick={() => handleUpdateApplication(app._id)}
+                                >
+                                  Update
+                                </button>
+                              </div>
+                            )}
+                            {/* For technical roles, show disabled fields */}
+                            {job.type === "technical" && (
+                              <div className="flex gap-2 mt-2 opacity-50 pointer-events-none">
+                                <select disabled className="p-1 rounded bg-slate-800 text-white border border-blue-950">
+                                  <option value="">--Select Status--</option>
+                                  <option value="reviewed">Reviewed</option>
+                                  <option value="interview">Interview</option>
+                                  <option value="rejected">Rejected</option>
+                                  <option value="hired">Hired</option>
+                                </select>
+                                <input
+                                  type="text"
+                                  placeholder="Comment"
+                                  disabled
+                                  className="p-1 rounded bg-slate-800 text-white border border-blue-950"
+                                />
+                                <button
+                                  className="px-3 py-1 bg-green-700 text-white rounded hover:bg-green-800"
+                                  disabled
+                                >
+                                  Update
+                                </button>
+                              </div>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="text-slate-400">No applications for this job.</div>
+                    )}
+                  </div>
+                )}
               </li>
             ))}
           </ul>
         </div>
-
-        {selectedJob && (
-          <div className="mb-8">
-            <h3 className="text-xl font-semibold text-white mb-3">
-              Applications for: {selectedJob.title}
-            </h3>
-            {selectedJobApplications.length === 0 ? (
-              <div className="text-slate-300">No applications for this job.</div>
-            ) : (
-              <ul className="space-y-2">
-                {selectedJobApplications.map((app) => (
-                  <li key={app._id} className="bg-slate-900 p-3 rounded border border-blue-950">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold text-white">
-                        {selectedJob.title} — {app.applicant?.username || app.applicant || "Unknown Applicant"}
-                      </span>
-                      <span className="text-slate-300">Status: {app.status}</span>
-                    </div>
-                    <div className="text-slate-400 text-xs">
-                      Applied: {new Date(app.appliedAt || Date.now()).toLocaleString()}
-                    </div>
-                    {app.resume && (
-                      <a
-                        href={`http://localhost:4000/${app.resume}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-400 underline mr-2"
-                      >
-                        View Resume
-                      </a>
-                    )}
-                    {app.coverLetter && (
-                      <p className="text-slate-300 text-sm mt-1">
-                        <strong>Cover Letter:</strong> {app.coverLetter}
-                      </p>
-                    )}
-                    {app.logs?.length > 0 && (
-                      <div className="mt-2 text-slate-300">
-                        <span>Logs:</span>
-                        <ul className="ml-4 text-xs text-slate-400">
-                          {app.logs.map((log, idx) => (
-                            <li key={idx}>
-                              {log.timestamp} - {log.updatedBy}: {log.status}{" "}
-                              {log.comment && `(${log.comment})`}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    {/* Only show status/comment/update for non-technical roles */}
-                    {selectedJob.type === "non-technical" && (
-                      <div className="flex gap-2 mt-2">
-                        <select
-                          value={statusUpdate.status}
-                          onChange={(e) =>
-                            setStatusUpdate({ ...statusUpdate, status: e.target.value })
-                          }
-                          className="p-1 rounded bg-slate-800 text-white border border-blue-950"
-                        >
-                          <option value="">--Select Status--</option>
-                          <option value="reviewed">Reviewed</option>
-                          <option value="interview">Interview</option>
-                          <option value="rejected">Rejected</option>
-                          <option value="offer">Offer</option>
-                        </select>
-                        <input
-                          type="text"
-                          placeholder="Comment"
-                          value={statusUpdate.comment}
-                          onChange={(e) =>
-                            setStatusUpdate({ ...statusUpdate, comment: e.target.value })
-                          }
-                          className="p-1 rounded bg-slate-800 text-white border border-blue-950"
-                        />
-                        <button
-                          className="px-3 py-1 bg-green-700 text-white rounded hover:bg-green-800"
-                          onClick={() => handleUpdateApplication(app._id)}
-                        >
-                          Update
-                        </button>
-                      </div>
-                    )}
-                    {/* For technical roles, show disabled fields*/}
-                    {selectedJob.type === "technical" && (
-                      <div className="flex gap-2 mt-2 opacity-50 pointer-events-none">
-                        <select disabled className="p-1 rounded bg-slate-800 text-white border border-blue-950">
-                          <option value="">--Select Status--</option>
-                          <option value="reviewed">Reviewed</option>
-                          <option value="interview">Interview</option>
-                          <option value="rejected">Rejected</option>
-                          <option value="hired">Hired</option>
-                        </select>
-                        <input
-                          type="text"
-                          placeholder="Comment"
-                          disabled
-                          className="p-1 rounded bg-slate-800 text-white border border-blue-950"
-                        />
-                        <button
-                          className="px-3 py-1 bg-green-700 text-white rounded hover:bg-green-800"
-                          disabled
-                        >
-                          Update
-                        </button>
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );
