@@ -44,8 +44,7 @@ export default function BotDashboard() {
   function handleLogout() {
     localStorage.clear();
     sessionStorage.clear();
-    setToken(null);
-    setUser(null);
+    
     navigate("/signin");
   }
 
