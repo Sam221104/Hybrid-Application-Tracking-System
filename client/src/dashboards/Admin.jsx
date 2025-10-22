@@ -32,7 +32,7 @@ export default function AdminDashboard() {
     comment: "",
   });
   const [openJobId, setOpenJobId] = useState(null);
-  const [jobApplications, setJobApplications] = useState({}); // Store applications per job
+  const [jobApplications, setJobApplications] = useState({}); 
 
   function handleLogout() {
     localStorage.clear();
@@ -85,12 +85,11 @@ export default function AdminDashboard() {
     if (!statusUpdate.status) return alert("Select status first");
     const data = await updateApplicationStatus(token, appId, statusUpdate);
     if (!data.error) {
-      // Refresh applications for the open job dropdown
       if (openJobId) {
         const apps = await getApplicationsForJob(token, openJobId);
         setJobApplications((prev) => ({ ...prev, [openJobId]: apps }));
       }
-      setStatusUpdate({ status: "", comment: "" }); // Optionally reset status/comment
+      setStatusUpdate({ status: "", comment: "" }); 
     } else alert(data.error);
   }
 
