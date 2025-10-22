@@ -192,12 +192,8 @@ npm run dev
 
 ---
 
-## License
 
-MIT
-
----
 
 ## Contact
 
-For support or questions, open an issue or contact [your-email@example.com](mailto:your-email@example.com).
+For support or questions, open an issue or contact [samsylvester1206@gmail.com](mailto:samsylvester1206@gmail.com).
