@@ -55,7 +55,7 @@ export async function getJobs(token) {
 
 export async function getJobsForApplicants(token) {
   try {
-    const res = await fetch("http://localhost:4000/api/applications", {
+    const res = await fetch(`${API_BASE}/applications`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -159,7 +159,7 @@ export async function updateApplicationStatus(token, applicationId, statusUpdate
 }
 
 export async function getApplicationsForJob(token, jobId) {
-  const res = await fetch(`http://localhost:4000/api/applications/job/${jobId}`, {
+  const res = await fetch(`${API_BASE}/applications/job/${jobId}`, {
     headers: { Authorization: `Bearer ${token}` }
   });
   return await res.json();
